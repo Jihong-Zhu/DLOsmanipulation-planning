@@ -1,2 +1,4 @@
 # m temp file
 *.m~
+# figure file
+*.png
