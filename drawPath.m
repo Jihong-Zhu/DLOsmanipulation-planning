@@ -1,6 +1,8 @@
 % Generate path and shape planning 
 %% Using DLO model
-addpath('/home/jihong/DLOs_Manpiluation/dlo_modelling'); % add the DLO model
+% addpath('/home/jihong/DLOs_Manpiluation/dlo_modelling'); % add the DLO model
+addpath('/home/jihong/DLOs_Manpiluation/DLO_3D');
+addpath('/home/jihong/DLOs_Manpiluation/DLO_3D/Tools')
 %% Plot the path
 figure(1);
 load pathSingleArm.mat
@@ -17,12 +19,15 @@ hold off;
 %% Generate DLO along the path
 figure(2)
 hold on;
-axis([0 1 -1 1])
+axis([-1 1 -1 1])
 axis equal;
-% for k = 1 : 3
-%     if (k ~=4 && k~=6)
-dloShape = dlody_Pos(0, 0, p(1, 1), p(1, 2));
-sz = 25;
-scatter(dloShape(:, 1), dloShape(:, 2), sz, 'filled');
-%     end
+state0 = zeros(1, 6);
+% for k = 1 : numOfSamples
+    state1 = state0;
+    state1(1) = p(1, 1);
+    state1(3) = p(1, 2);
+    param = dlody3D(state0, state1);
+    [d, ~] = dloData(param, 6, 0, 1, 0.1, state0, 0.0);
+    sz = 25;
+    scatter(d(1, :), d(3, :), sz, 'filled');
 % end

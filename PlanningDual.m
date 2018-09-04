@@ -34,19 +34,21 @@ for i = 1 : numOfSamples
     % Right
     f = @(x)pathGenCost(x, numOfSamples + 1 - i, numOfOrders, pRight0, pRight1, pLeft0);
     nonlcon = @(x)nonlConDual(x, numOfSamples + 1 - i, numOfOrders, pRight0, pRight1, pLeft0, cond1, cond2);
-    [x,~] = fmincon(f,xr0,A,b,Aeq,beq,lb,ub,nonlcon);
+%     [x, ~] = fmincon(f,xr0,A,b,Aeq,beq,lb,ub,nonlcon);
+    [x, ~] = fminimax(f,xr0,A,b,Aeq,beq,lb,ub,nonlcon);
     % implement only the first point
     p = pathGen(x, numOfSamples + 1 - i, numOfOrders, pRight0, pRight1);
     pRight0 = p(2, :);  % update pRight
-%     xr0 = x;    % update initial value of optimization problem
+    xr0 = x;    % update initial value of optimization problem
     % Left
     f = @(x)pathGenCost(x, numOfSamples + 1 - i, numOfOrders, pLeft0, pLeft1, pRight0);
     nonlcon = @(x)nonlConDual(x, numOfSamples + 1 - i, numOfOrders, pLeft0, pLeft1, pRight0, cond1, cond2);
-    [x,~] = fmincon(f,xl0,A,b,Aeq,beq,lb,ub,nonlcon);
+%     [x,~] = fmincon(f,xl0,A,b,Aeq,beq,lb,ub,nonlcon);
+    [x, ~] = fminimax(f,xl0,A,b,Aeq,beq,lb,ub,nonlcon);
     % implement only the first point
     p = pathGen(x, numOfSamples + 1 - i, numOfOrders, pLeft0, pLeft1);
     pLeft0 = p(2, :);  % update pRight
-%     xl0 = x;    % update initial value of optimization problem
+    xl0 = x;    % update initial value of optimization problem
     RightTraj = [RightTraj; pRight0];
     LeftTraj = [LeftTraj; pLeft0];
 end

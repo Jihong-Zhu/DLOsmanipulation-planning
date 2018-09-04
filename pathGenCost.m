@@ -12,3 +12,4 @@ p = pathGen(x, n, m, p0, p1);
 p = p - refP;
 d = p(:, 1).^2 + p(:, 2).^2;
 dmin_neg = - min(d);
+% dmin_neg = -d;  % for minmax optimzation
