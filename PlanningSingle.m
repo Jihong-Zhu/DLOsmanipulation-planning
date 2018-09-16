@@ -45,6 +45,8 @@ axis off
 %% Optimization
 options = optimset('Display','iter','Algorithm','interior-point', 'MaxIter', 10000, 'MaxFunEvals', inf); %, 'OutputFcn',@plotCost);  % To check if the cost is decreasing with iteration
 [x, fval] = fmincon(f,x0,A,b,Aeq,beq,lb,ub,nonlcon,options);
+p = pathGen(x, numOfSamples, numOfOrders, p0, p1);
+% p = pathGenBezier(x, numOfSamples, numOfOrders, p0, p1);
 % [x, fval] = fminimax(f,x0,A,b,Aeq,beq,lb,ub,nonlcon, options);   % use minmax instead
 % hold off;
 %% Draw path
@@ -53,8 +55,7 @@ rectangle('Position', [cond, ymin, 0.4, ymax - ymin], 'FaceColor',[0.5 0.5 0.5],
     'LineWidth',3); % obstacle
 axis equal;
 hold on;
-p = pathGen(x, numOfSamples, numOfOrders, p0, p1);
-scatter(p(:, 1), p(:, 2));
+plot(p(:, 1), p(:, 2));
 hold off;
 %% Generate shape for each point (Andre's 3D model)
 figure(3)
@@ -87,7 +88,7 @@ for numOfData = 1 : length(p)
 end
 axis equal;
 hold off;
-%% Generate shape for each point (My 2D model)
+%% Generate shape for each point (My 2D model No angle)
 figure(4)
 addpath('/home/jihong/DLOs_Manpiluation/dlo_modelling');
 rectangle('Position', [cond, ymin, 0.4, ymax - ymin], 'FaceColor',[0.5 0.5 0.5],'EdgeColor','k',...
@@ -97,23 +98,49 @@ scatter(p0(1),p0(2), 100, 'filled');
 scatter(p1(1),p1(2), 100, '*');
 n = 4; % Use 4th order approximation
 init = zeros(2 * n + 2, 1);
-[dlo, ~, ~] = dlody_Pos(0, 0, p0(1), p0(2), 0.0, init);
+[dlo, ~, para_a, ~] = dlody_Pos(0, 0, p0(1), p0(2), 0.0, init);
 % calculate the angle
 [~, rotR] = rotFromData(dlo,4);
 plot(dlo(:, 1), dlo(:, 2), 'k', 'LineWidth',3);
-dlo = dlodynamics(0, 0, p1(1), p1(2), 0.0, theta, init);
+[dlo, ~] = dlodynamics(0, 0, p1(1), p1(2), 0.0, theta, init);
 plot(dlo(:, 1), dlo(:, 2), '--k', 'LineWidth',3);
 % save data for robot control
 robPath = [p0(1), p0(2), rotR];
 for numOfData = 2 : length(p) - 1
-    [dlo, ~, param] = dlody_Pos(0, 0, p(numOfData, 1), p(numOfData, 2), 0.0, init);
+    [dlo, ~, para_a, angleEnd] = dlody_Pos(0, 0, p(numOfData, 1), p(numOfData, 2), 0.0, para_a);
     [~, rotR] = rotFromData(dlo,4);     % save data for robot control
     robPath = [robPath; p(numOfData, 1), p(numOfData, 2), rotR]; % save data for robot control
-    init = param;   % use previous solution as initialization
+%     init = param;   % use previous solution as initialization
     plot(dlo(:, 1), dlo(:, 2),'-.k', 'LineWidth',3);
 end
 robPath = [robPath; p1(1), p1(2), theta];   % save data for robot control
 robPath(:,3) = - robPath(:,3) / pi * 180;    % save data for robot control
+% Save data for trajectory reply
+robPath = robPath * 0.4;
+csvwrite('data40_2.csv', robPath);
+axis equal;
+axis off;
+%% Generate shape for each point with angle
+figure(4)
+addpath('/home/jihong/DLOs_Manpiluation/dlo_modelling');
+rectangle('Position', [cond, ymin, 0.4, ymax - ymin], 'FaceColor',[0.5 0.5 0.5],'EdgeColor','k',...
+    'LineWidth',3); % obstacle
+hold on;
+scatter(p0(1),p0(2), 100, 'filled');
+scatter(p1(1),p1(2), 100, '*');
+n = 4; % Use 4th order approximation
+init = zeros(2 * n + 2, 1);
+[dlo, ~, init, Endtheta] = dlody_Pos(0, 0, p0(1), p0(2), 0.0, init);
+% Plan the angle:
+pRot = linspace(Endtheta, theta, numOfSamples);
+plot(dlo(:, 1), dlo(:, 2), 'k', 'LineWidth',3);
+[dlo, ~] = dlodynamics(0, 0, p1(1), p1(2), 0.0, theta);
+plot(dlo(:, 1), dlo(:, 2), '--k', 'LineWidth',3);
+for numOfData = 2 : length(p) - 1
+    [dlo, param] = dlodynamics(0, 0, p(numOfData, 1), p(numOfData, 2), 0.0, pRot(numOfData), init);
+    init = param;   % use previous solution as initialization
+    plot(dlo(:, 1), dlo(:, 2),'-.k', 'LineWidth',3);
+end
 axis equal;
 axis off;
 %% Control + Planning full (My 2D model

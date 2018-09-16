@@ -3,3 +3,5 @@
 # figure file
 *.png
 test.m
+*.csv
+*.mat

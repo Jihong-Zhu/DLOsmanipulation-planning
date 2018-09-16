@@ -17,7 +17,7 @@ d = xp.^2 + yp.^2;
 d = d - 1;   % Maximum distance < total length of the DLO
 % obstacle 
 ob = xp;
-thre = 0.0;
+thre = 0;    % a threshold to avoid interference ()
 for j = 1 : length(yp)
     if yp(j) <= ymin || yp(j) >= ymax 
         ob(j) = - ob(j);
